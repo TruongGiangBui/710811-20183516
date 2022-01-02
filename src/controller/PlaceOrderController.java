@@ -1,12 +1,15 @@
 package controller;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 import entity.cart.Cart;
 import entity.cart.CartMedia;
@@ -15,12 +18,20 @@ import entity.invoice.Invoice;
 import entity.order.Order;
 import entity.order.OrderMedia;
 import views.screen.popup.PopupScreen;
+import utils.ShippingFeesCalculator;
+import utils.NewShippingFeesCalculator;
+import utils.NormalShippingFeesCalculator;
 
 /**
  * This class controls the flow of place order usecase in our AIMS project
  * @author nguyenlm
  */
 public class PlaceOrderController extends BaseController{
+    // 
+    private ShippingFeesCalculator shippingFeesCalculator;
+    public void setShippingFeesCalculator(ShippingFeesCalculator shippingFeesCalculator) {
+        this.shippingFeesCalculator = shippingFeesCalculator;
+    }
 
     /**
      * Just for logging purpose
@@ -80,7 +91,8 @@ public class PlaceOrderController extends BaseController{
    * @throws IOException
    */
     public void validateDeliveryInfo(HashMap<String, String> info) throws InterruptedException, IOException{
-        if(!validateName(info.get("name"))){
+        // - 
+    	if(!validateName(info.get("name"))){
             throw new InterruptedException("Name is invalid");
         }
         if(!validateAddress(info.get("address"))){
@@ -89,33 +101,83 @@ public class PlaceOrderController extends BaseController{
         if(!validatePhoneNumber(info.get("phone"))){
             throw new InterruptedException("Phone number is invalid");
         }
+
+        //Neu khach hang lua chon Place Rush Order thi tien hanh kiem tra xem du dieu kien khong
+        if(info.get("rushOrder") == "true") {
+            if(!validateProvince(info.get("province"))) {
+                throw new InterruptedException("Province does not support rush order");
+            }
+        }
     }
-    /**
-     * This method validate phone number
-     * @param phoneNumber
-     * @return isvalid
-     */
+    
     public boolean validatePhoneNumber(String phoneNumber) {
-        if(phoneNumber==null) return false;
-    	return Pattern.matches("[0][0-9]{9}",phoneNumber);
+    	// - 
+    	// TODO: your work
+    	
+    	//check the phone number has 10 digits
+    	if(phoneNumber.length() != 10) return false;
+    	
+    	//check the phone number start with 0
+    	if (!phoneNumber.startsWith("0")) return false;
+    	
+    	//check phone number contains only number
+    	try {
+    		Integer.parseInt(phoneNumber);
+    	}
+    	catch (NumberFormatException e) {
+    		return false;
+    	}
+    	return true;
     }
-    /**
-     * This method validate name
-     * @param name
-     * @return isvalid
-     */
+    
     public boolean validateName(String name) {
-        if (name==null) return false;
-    	return Pattern.matches("[a-zA-Z ]+",name);
+    	// - 
+    	// TODO: your work
+    	//check not null
+    	if (name == null) return false;
+    	
+    	//check only letter
+    	Pattern p = Pattern.compile("[^A-Za-z ]");
+    	Matcher m = p.matcher(name);
+    	
+    	boolean check = m.find();
+    	if (check == true) return false;
+    	return true;
     }
-    /**
-     * This method validate address
-     * @param address
-     * @return isvalid
-     */
+    
     public boolean validateAddress(String address) {
-        if (address==null) return false;
-        return Pattern.matches("[a-zA-Z0-9 ,]+",address);
+    	// - 
+    	// TODO: your work
+    	//check not null
+    	if (address == null) return false;
+    	
+    	//check no special char
+    	
+    	Pattern p = Pattern.compile("[^A-Za-z0-9 ,]");
+    	Matcher m = p.matcher(address);
+    	
+    	boolean check = m.find();
+    	if (check == true) return false;
+    	return true;
+    }
+
+    /**
+     * Kiem tra xem dia diem co ho tro giao hang nhanh hay khong, cu the o day chi ho tro Ha Noi hoac TP.Ho Chi Minh hoac Da Nang
+     * @param province : dia diem khach hang yeu cau van chuyen den
+     * @return
+     */
+    public boolean validateProvince(String province){
+        // - 
+        // Dia diem giao hang khong duoc ho tro
+        if(province == null){
+            return false;
+        }
+
+        //Chi giao hang nhanh o Ha Noi, Da Nang va Ho Chi Minh
+        if(province.equals("Hà Nội") || province.equals("Đà Nẵng") || province.equals("Hồ Chí Minh")) {
+            return true;
+        }
+        return false;
     }
     
 
@@ -125,9 +187,6 @@ public class PlaceOrderController extends BaseController{
      * @return shippingFee
      */
     public int calculateShippingFee(Order order){
-        Random rand = new Random();
-        int fees = (int)( ( (rand.nextFloat()*10)/100 ) * order.getAmount() );
-        LOGGER.info("Order Amount: " + order.getAmount() + " -- Shipping Fees: " + fees);
-        return fees;
+        return shippingFeesCalculator.calculateShippingFees(order);
     }
 }

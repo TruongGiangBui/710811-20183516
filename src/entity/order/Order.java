@@ -52,6 +52,10 @@ public class Order {
         this.deliveryInfo = deliveryInfo;
     }
 
+    public boolean rushOrder() {
+        return deliveryInfo.get("rushOrder").equals("true");
+    }
+
     public int getAmount(){
         double amount = 0;
         for (Object object : lstOrderMedia) {
@@ -59,6 +63,24 @@ public class Order {
             amount += om.getPrice();
         }
         return (int) (amount + (Configs.PERCENT_VAT/100)*amount);
+    }
+
+    public float getTotalWeight() {
+        float totalWeight = 0;
+        for (Object object : lstOrderMedia) {
+            OrderMedia media = (OrderMedia) object;
+            totalWeight += media.getMedia().getWeight();
+        }
+        return totalWeight;
+    }
+
+    public float getTotalAlternativeWeight() {
+        float totalAlternativeWeight = 0;
+        for (Object object : lstOrderMedia) {
+            OrderMedia media = (OrderMedia) object;
+            totalAlternativeWeight += media.getMedia().getAlternativeWeight();
+        }
+        return totalAlternativeWeight;
     }
 
 }

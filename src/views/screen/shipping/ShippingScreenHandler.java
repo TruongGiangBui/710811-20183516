@@ -17,11 +17,15 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.RadioButton;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import utils.Configs;
 import views.screen.BaseScreenHandler;
 import views.screen.invoice.InvoiceScreenHandler;
+import utils.NormalShippingFeesCalculator;
+import utils.ShippingFeesCalculator;
+import utils.NewShippingFeesCalculator;
 import views.screen.popup.PopupScreen;
 
 public class ShippingScreenHandler extends BaseScreenHandler implements Initializable {
@@ -44,6 +48,9 @@ public class ShippingScreenHandler extends BaseScreenHandler implements Initiali
 	@FXML
 	private ComboBox<String> province;
 
+	@FXML
+	private RadioButton rushOrder;
+
 	private Order order;
 
 	public ShippingScreenHandler(Stage stage, String screenPath, Order order) throws IOException {
@@ -63,6 +70,14 @@ public class ShippingScreenHandler extends BaseScreenHandler implements Initiali
 		this.province.getItems().addAll(Configs.PROVINCES);
 	}
 
+	/**
+	 *
+	 * @param event : su kien submit DeliveryInfo
+	 * rushOrder : lua chon cua khach hang co place rush order hay khong
+	 * @throws IOException
+	 * @throws InterruptedException
+	 * @throws SQLException
+	 */
 	@FXML
 	void submitDeliveryInfo(MouseEvent event) throws IOException, InterruptedException, SQLException {
 
@@ -73,17 +88,23 @@ public class ShippingScreenHandler extends BaseScreenHandler implements Initiali
 		messages.put("address", address.getText());
 		messages.put("instructions", instructions.getText());
 		messages.put("province", province.getValue());
+
+		//Thong tin khach hang co lua chon rushOrder hay khong
+		messages.put("rushOrder", rushOrder.isSelected() ? "true" : "false");
+
 		try {
 			// process and validate delivery info
 			getBController().processDeliveryInfo(messages);
 		} catch (InvalidDeliveryInfoException e) {
 			throw new InvalidDeliveryInfoException(e.getMessage());
 		}
-	
+		// - 
+
+		order.setDeliveryInfo(messages);
 		// calculate shipping fees
+		getBController().setShippingFeesCalculator(new NewShippingFeesCalculator());
 		int shippingFees = getBController().calculateShippingFee(order);
 		order.setShippingFees(shippingFees);
-		order.setDeliveryInfo(messages);
 		
 		// create invoice screen
 		Invoice invoice = getBController().createInvoice(order);

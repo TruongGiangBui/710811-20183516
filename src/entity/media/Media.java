@@ -15,7 +15,7 @@ import utils.Utils;
  * @author nguyenlm
  */
 public class Media {
-
+    // 
     private static Logger LOGGER = Utils.getLogger(Media.class.getName());
 
     protected Statement stm;
@@ -27,6 +27,10 @@ public class Media {
     protected int quantity;
     protected String type;
     protected String imageURL;
+    protected float length;
+    protected float width;
+    protected float height;
+    protected float weight;
 
     public Media() throws SQLException{
         stm = AIMSDB.getConnection().createStatement();
@@ -56,13 +60,17 @@ public class Media {
 		if(res.next()) {
 
             return new Media()
-                .setId(res.getInt("id"))
-                .setTitle(res.getString("title"))
-                .setQuantity(res.getInt("quantity"))
-                .setCategory(res.getString("category"))
-                .setMediaURL(res.getString("imageUrl"))
-                .setPrice(res.getInt("price"))
-                .setType(res.getString("type"));
+                    .setId(res.getInt("id"))
+                    .setTitle(res.getString("title"))
+                    .setQuantity(res.getInt("quantity"))
+                    .setCategory(res.getString("category"))
+                    .setMediaURL(res.getString("imageUrl"))
+                    .setPrice(res.getInt("price"))
+                    .setType(res.getString("type"))
+                    .setWeight(res.getFloat("weight"))
+                    .setHeight(res.getFloat("height"))
+                    .setLength(res.getFloat("length"))
+                    .setWidth(res.getFloat("width"));
         }
         return null;
     }
@@ -155,6 +163,45 @@ public class Media {
         return this;
     }
 
+    public float getWeight() {
+        return this.weight;
+    }
+
+    public Media setWeight(float weight) {
+        this.weight = weight;
+        return this;
+    }
+
+    public float getHeight() {
+        return this.height;
+    }
+
+    public Media setHeight(float height) {
+        this.height = height;
+        return this;
+    }
+
+    public float getWidth() {
+        return this.width;
+    }
+
+    public Media setWidth(float width) {
+        this.width = width;
+        return this;
+    }
+
+    public float getLenght() {
+        return this.length;
+    }
+
+    public Media setLength(float length) {
+        this.length = length;
+        return this;
+    }
+
+    public float getAlternativeWeight() {
+        return this.length*this.width*this.height/6000;
+    }
     @Override
     public String toString() {
         return "{" +
